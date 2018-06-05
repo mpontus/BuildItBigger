@@ -1,6 +1,5 @@
 package com.udacity.gradle.builditbigger;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +17,8 @@ import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    private EndpointsAsyncTask task;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,18 +50,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void tellJoke(View view) {
-        EndpointsAsyncTask task = new EndpointsAsyncTask(this);
+        if (task == null) {
+            task = new EndpointsAsyncTask(new EndpointsAsyncTask.OnPostExecuteCallback() {
+                @Override
+                public void onPostExecute(String result) {
+                    Intent intent = new Intent(MainActivity.this, JokeActivity.class);
 
-        task.execute();
+                    intent.putExtra(JokeActivity.EXTRA_TEXT, result);
+
+                    startActivity(intent);
+                }
+            });
+
+            task.execute();
+        }
     }
 
+    @Override
+    protected void onDestroy() {
+        if (task != null && !task.isCancelled()) {
+            task.cancel(true);
+        }
+
+        super.onDestroy();
+    }
 
     static final class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
         private MyApi myApiService = null;
-        private final Context context;
+        OnPostExecuteCallback callback;
 
-        public EndpointsAsyncTask(Context context) {
-            this.context = context;
+        EndpointsAsyncTask(OnPostExecuteCallback callback) {
+            this.callback = callback;
         }
 
         @Override
@@ -82,11 +102,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            Intent intent = new Intent(context, JokeActivity.class);
+            callback.onPostExecute(result);
+        }
 
-            intent.putExtra(JokeActivity.EXTRA_TEXT, result);
-
-            context.startActivity(intent);
+        interface OnPostExecuteCallback {
+            void onPostExecute(String result);
         }
     }
 }
