@@ -22,11 +22,15 @@ public class JokeActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        Intent intent = getIntent();
-        String text = intent.getStringExtra(EXTRA_TEXT);
         TextView contentView = (TextView) findViewById(R.id.content);
 
-        contentView.setText(text);
+        Intent intent = getIntent();
+
+        if (intent.hasExtra(EXTRA_TEXT)) {
+            String text = intent.getStringExtra(EXTRA_TEXT);
+
+            contentView.setText(text);
+        }
     }
 
     @Override
